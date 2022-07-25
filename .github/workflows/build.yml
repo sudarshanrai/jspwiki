@@ -2,9 +2,7 @@ name: Build
 on:
   push:
     branches:
-      - master
       - JSPWIKI_JCR_BRANCH
-      - JSPWIKI_1_8_BRANCH
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
