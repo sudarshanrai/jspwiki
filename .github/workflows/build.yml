@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - master
+      - JSPWIKI_JCR_BRANCH
+      - JSPWIKI_1_8_BRANCH
+      - JSPWIKI_2_0_BRANCH
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
