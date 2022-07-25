@@ -41,6 +41,8 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.build.outputTimestamp>2022-02-21T20:49:57Z</project.build.outputTimestamp> <!-- will be changed by release plugin during releases -->
     <jdk.version>1.8</jdk.version>
+    <sonar.organization>sudarshanrai</sonar.organization>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <jdk.javadoc.doclet.version>1.1.4</jdk.javadoc.doclet.version>
     <maven.version>3.5</maven.version>
 
