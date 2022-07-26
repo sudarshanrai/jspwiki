@@ -26,6 +26,7 @@ import org.apache.wiki.api.core.Page;
 import org.apache.wiki.pages.PageManager;
 import org.apache.wiki.util.HttpUtil;
 import org.apache.wiki.util.TextUtil;
+import org.owasp.encoder.Encode;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspWriter;
@@ -279,11 +280,11 @@ public class CalendarTag extends WikiTagBase {
         final HttpServletRequest httpServletRequest = m_wikiContext.getHttpRequest();
         final String queryString = HttpUtil.safeGetQueryString( httpServletRequest, engine.getContentEncoding() );
         out.write( "<tr>"+
-                   getMonthNaviLink(prevCal,"&lt;&lt;", queryString)+
+                   Encode.forHtml(getMonthNaviLink(prevCal,"&lt;&lt;", queryString))+
                    "<td colspan=5 class=\"month\">"+
-                   getMonthLink( cal )+
+                   Encode.forHtml(getMonthLink( cal ))+
                    "</td>"+
-                   getMonthNaviLink(nextCal,"&gt;&gt;", queryString)+ 
+                   Encode.forHtml(getMonthNaviLink(nextCal,"&gt;&gt;", queryString))+ 
                    "</tr>\n"
                  );
 
