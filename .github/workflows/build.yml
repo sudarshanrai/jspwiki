@@ -4,7 +4,7 @@ on:
     branches:
       - master
       - branch-*
-      -tmp
+      - tmp*
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
