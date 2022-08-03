@@ -18,6 +18,12 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/*eslint-env browser*/
+/*global $ */
+/*exported AddCSS */
+
+
 /* Behavior: Add-CSS
         Inject any custom css into a wiki page.
         You can either directly insert the css definitions in your page or
@@ -30,29 +36,53 @@
 >   %%add-css ... /%
 >   %%add-css [some-remote-wiki-page] /%
 */
-//Wiki.AddCSS function( element ){
-function AddCSS( element ){
+function AddCSS(element) {
 
-    function insertStyle ( elements ){
+    function insertStyle(elements) {
 
-        var css = "", item;
+        var css = "",    //css = "".concat(...elements);
+            item;
 
-        //collect all css to be inserted
-        while( item = elements.shift() ){ css += item.innerHTML; }
+        //concatenate all css to be inserted
+        while( (item = elements.shift()) ){ css += item.innerHTML; }
 
-        //magic to replace the inline wiki-image links to css url()
-        //xss protection: remove invalid url's;  only allow url([wiki-attachement])
-        css = css.replace( /url\(\<[^i][^)]*\)/gi, "url(invalid)" ); //remove url(<a...)
-        css = css.replace( /url\([^<][^)]*\)/gi, "url(invalid)" );  //remove url(xxx)
-        css = css.replace( /url\(<img class="inline" src="([^"]+)[^>]+>\)/gi, "url($1)" );
+        css = css //cascading replaces
 
-        css = css.replace( /<p>|<\/p>/gi, "" ); //jspwiki inserts <p/> for empty lines
+            //allow google fonts @import url(https://fonts.googleapis.com/css?family=XXXX);
+            .replace(/@import url\(https:\/\/fonts.googleapis.com\/css\?family=/gi, "\xa4")
 
-        css = css.replace( /&amp;/g, "&" )
-                 .replace( /&gt;/g, ">" )
-                 .replace( /&lt;/g, "<" );
+            //fixme: allow data:image/svg+xml
+            .replace(/url\("data:image\/svg\+xml/gi,"\xa6")
 
-        css = "style[type=text/css]".slick({text: css});
+            //replace wiki-image links to css url()
+            //xss protection: remove invalid url's;  only allow url([wiki-attachement])
+            .replace(/url\(<a class="attachment" href="([^"]+.woff)".*><\/a>\)/gi, 'url(<\xa5$1")')
+            .replace(/url\(<a class="attachment" href="([^"]+.ttf)".*><\/a>\)/gi, 'url(<\xa5$1")')
+            .replace(/url\(<a class="attachment" href="([^"]+.otf)".*><\/a>\)/gi, 'url(<\xa5$1")')
+
+            //remaining unmarked urls are invalid
+            .replace(/url\(<a[^>]+>\)/gi, "url(invalid)") //remove remaining url(<a...)
+            .replace(/url\([^<][^)]+\)/gi, "url(invalid)")  //remove remaining url(xxx)
+
+            .replace(/@import/gi, "invalid") //xss protection: remove the remaining @import statements
+
+            //restore svg images
+            .replace(/\xa6/g, "url(\"data:image/svg+xml")
+
+            //restore google font urls
+            .replace(/\xa4/g, "@import url(https://fonts.googleapis.com/css?family=") //google fonts -part2
+
+            .replace(/expression|behavior/gi, "invalid") //xss protection: remove IE dynamic properties
+
+            .replace(/url\(<img class="inline" .*?src="([^"]+)[^>]*>\)/gi, "url($1)")
+            .replace(/<\xa5([^"]+)"/gi, "$1")  //attached font files- part2
+
+            .replace(/<p>|<\/p>/gi, "") //jspwiki inserts <p/> for empty lines, remove them
+            .replace(/&amp;/g, "&")
+            .replace(/&gt;/g, ">")
+            .replace(/&lt;/g, "<");
+
+        css = "style[type=text/css]".slick({ text: css });
 
         /*
         Sequence to insert CSS is :
@@ -64,25 +94,24 @@ function AddCSS( element ){
         need to be inserted at the top of the DOM, i.e. just at the top of the BODY element.
         Other CCS is injected in the order of appearance.
         */
-        if( element.getParent( ".sidebar" ) ){
+        if (element.closest(".sidebar")) {
 
-            $(document.body).grab(css, "top");
-            element.destroy();
+            var body = document.body;
+            body.insertBefore(css, body.firstChild);
+            //$.start(css, document.body);
+            element.remove();
 
         } else {
 
-            css.replaces( element );
+            css.replaces(element);
 
         }
+    }
 
-    };
-
-    if( element.innerHTML.test( /^\s*<a class="wikipage" href="([^"]+)">/ ) ){
+    if (element.innerHTML.test(/^\s*<a class="wikipage" href="([^"]+)">/)) {
 
         //%%add-css [some-wikipage] /%
-        //go and read the %%add-css blocks from another remote page -- how hard is that ?
-        //then filter all div.page-content div.add-css elements
-
+        //read another wiki page, and select all div.page-content div.add-css blocks
         new Request.HTML({
             url: RegExp.$1,
             filter: "div.page-content div.add-css",
@@ -95,5 +124,4 @@ function AddCSS( element ){
         insertStyle([element]);
 
     }
-
 }
