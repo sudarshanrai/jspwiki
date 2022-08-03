@@ -38,8 +38,10 @@ DOM structure:
 */
 .filter-input {
 
-    input {
+    .form-control {
+    	display:inline-block;
         width: 40%;
+        min-width: @wiki-small-viewport-dialog-width;
         padding-right: 1.5em;
         //&:focus ~ .icon-filter { .hide; }
     }

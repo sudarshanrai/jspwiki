@@ -115,7 +115,7 @@ DOM structure:
 
     .body {
         padding: 0.25em 0 0 0;
-        overflow: scroll;
+        overflow:auto;
         max-height: 300px;
 
         ul {
@@ -141,6 +141,7 @@ DOM structure:
         .selected {
             //inherit from .dropdown-menu > .active > a
             color: @dropdown-link-active-color;
+            [class*=text-] { color: @dropdown-link-active-color; }
             text-decoration: none;
             outline: 0;
             background-color: @dropdown-link-active-bg;
@@ -151,16 +152,29 @@ DOM structure:
 
     }
 
-    &.dialog-horizontal .item { float: left; padding:0.5em; }
     &.dialog-horizontal {
         width: auto;
-        .body { padding: 0 2em 0 0.5em; } //reserve place for the .close button
+
+        .body { padding: 0 2em 0 0.5em; } //reserve space for the .close button on the right
+
+        .item {
+            float: left;
+            padding: 0.5em;
+        }
+
+        .divider {
+            float: left;
+            margin: 0 0.5em;
+            padding: 20px 1px 18px 0;  //1px is the width of the divider,  FIXME padding top/bottom
+        }
     }
-    //&.dialog-horizontal .item:nth-child(6n) { float: none;  }
 
 }
-.dialog.chars .item { text-align:center; }
-
+.dialog.chars .item {
+        text-align:center;
+        position:relative;
+}
+.dialog.chars .body { max-height:200px; overflow:auto;  }
 
 /*
 Style: .dialog.color
@@ -235,7 +249,8 @@ Style: .dialog.color
     	position:absolute;
 
         //FIXME: dimensions copied from forms/.form-control - should be other ways to inherit this
-        height: @input-height-base; // Make inputs at least the height of their button counterpart (base line-height + padding + border)
+        //Make inputs at least the height of their button counterpart (base line-height + padding + border)
+        height: @input-height-base;
         padding: @padding-base-vertical @padding-base-horizontal;
         font-size: @font-size-base;
         //line-height: @line-height-base;
@@ -247,4 +262,31 @@ Style: .dialog.color
 
     }
 
+    [name=tbTEXTSEL] {
+        font-family: @font-family-monospace;
+	    resize: none !important; // disable resizable textareas in Webkit
+        .small;
+        background-color:transparent;
+    }
+
+    .btn-group { padding:0; }  //reset default bootstrap padding to alling with input elements
+
+}
+
+.dialog.selection.dialog-horizontal.icons {
+    .close { .hide;}
+    .body { padding:0; }
+    .item { width:32px; text-align:center; }
+    .item:nth-child(6n+1){ clear:both; }
+}
+
+.dialog.selection.dialog-horizontal.bg-colors {
+    .item { padding: 0; }
+    .item span { display:inline-block; }
+}
+
+.dialog.selection.dialog-horizontal.text-styles {
+    .divider { display:none;  }
+    .divider + * { clear:both;  }
+    .item[title=white] { background-color: @gray; }
 }

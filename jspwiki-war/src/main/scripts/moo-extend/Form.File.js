@@ -28,7 +28,7 @@ Credit:
     Arian Stolwijk, [https://github.com/arian/mootools-form-upload]
 
 */
-!function(){
+!(function(){
 
 
 function readableFileSize(bytes, precision){
@@ -68,6 +68,8 @@ Form.File = new Class({
         var form,
             isXHR20 = false; //force old browser -- FIXME:  "FormData" in window;
 
+        //isXHR20 = "FormData" in window;
+
         input = document.id(input);
         form = input.getParent("form");
         if(!form) return false;
@@ -89,7 +91,7 @@ Form.File = new Class({
         var self = this,
             disabled = "disabled";
 
-        console.log("update ",self.nbr,step);
+        //console.log("update ",self.nbr,step);
 
         self.nbr += step;
         self.submit.set(disabled, self.nbr ? "":disabled );
@@ -142,10 +144,11 @@ Form.File = new Class({
 
         self.reset = function(){
 
-            console.log(" reset ");
+            //console.log(" reset ");
             var files = inputFiles.getFiles();
 
             while( files[0] ){ inputFiles.remove( files.shift() ); }
+
             /*
             for (var i = 0; i < files.length; i++){
                 inputFiles.remove(files[i]);
@@ -197,9 +200,10 @@ Form.File = new Class({
 
                 for( var i=0; i< input.files.length; i++){
                     var file = input.files[i];
-                    fileNames += file.name.replace(/.*[\\\/]/, "")
-                              + " <span class='badge'>" + readableFileSize( file.size )+ "</span><br />";
-                  }
+                    fileNames += (i > 0 ? "<br />" : "")
+                              +  file.name.replace(/.*[\\\/]/, "").escapeHtml()
+                              + " <span class='badge'>" + readableFileSize( file.size )+ "</span>";
+                }
 
                 input.set("id",String.uniqueID());
                 input.set("name",String.uniqueID());
@@ -265,4 +269,4 @@ Form.File = new Class({
 
 });
 
-}();
+})();
