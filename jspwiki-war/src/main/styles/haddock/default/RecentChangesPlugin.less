@@ -26,19 +26,31 @@ DOM structure:
 */
 .recentchanges {
 
-    table-layout:fixed;  // this renders faster
-    .table-hover;
+	.wikitable;
+	//.table-borderless;
+	> tfoot > tr > th,
+	> thead > tr > td,
+	> tbody > tr > td,
+	> tfoot > tr > td {
+    	border-top: 0;
+	}
 
+    table-layout:fixed;  // this renders faster
+
+	.date {
+		border-bottom:3px double @wiki-sidebar-bg;
+		padding-bottom:0;
+
+		b {
+			font-weight:normal;
+			font-family:@font-family-sans-serif;
+			letter-spacing:1px;
+		}
+	}
     td {
-        vertical-align:top;
-    }
-    td.date {
-        vertical-align:bottom;
-        background-color:@wiki-recentchanges-date-bg;
-    	border-radius: @border-radius-base;
-        border:none;
-    }
-    tr.odd td {
-        background-color:transparent;
+        &:first-child {
+            width:auto;
+            padding-left:1em;
+        }
     }
 }

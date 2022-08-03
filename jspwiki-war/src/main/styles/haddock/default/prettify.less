@@ -44,7 +44,7 @@ DOM structure:
   .atn { color: #606; }  /* a markup attribute name */
   .atv { color: #080; }  /* a markup attribute value */
   .dec, .var { color: #606; }  /* a declaration; a variable name */
-  .fun { color: red; }  /* a function name */
+  .fun { color: @red; }  /* a function name */
 }
 
 // Use higher contrast and text-weight for printable form.
@@ -65,7 +65,7 @@ pre.prettylines {
     float: left;
     overflow-x: hidden;
     margin: 0;
-    color: @gray-light;
+    color: @wiki-prettylines-color;
     text-align: right;
     background: none;
     border-color: transparent;
@@ -75,7 +75,19 @@ pre.prettylines {
 //pre & code blocks have clear:both;
 .prettyprint {
     clear: right;      //allow left floating of .prettylines
-    overflow: scroll;
+    overflow: auto;
     white-space: pre;  //overwrite default 'pre-wrap'
-    word-wrap: normal; //overwrite default 'break-word'
+    overflow-wrap: normal; //overwrite default 'break-word'
+    word-spacing: normal;
+    word-break: normal;
+
+    -moz-tab-size: 4;
+    -o-tab-size: 4;
+    tab-size: 4;
+
+    -webkit-hyphens: none;
+    -moz-hyphens: none;
+    -ms-hyphens: none;
+    hyphens: none;
+
 }

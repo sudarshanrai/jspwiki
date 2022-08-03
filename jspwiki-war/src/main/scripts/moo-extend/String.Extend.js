@@ -18,6 +18,10 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/*eslint-env browser*/
+/*global $, typeOf */
+
 /*
 Mootools Extension: String.Extend.js
     String-extensions: capitalize,() deCamelize(), trunc(), xsubs()
@@ -41,6 +45,16 @@ String.implement({
     },
 
     /*
+    Function: escapeHtml
+    */
+    escapeHtml: function(){
+    	return this.replace(/[<>'"&]/g, function(s) {
+    	    return {'<':'&lt;','>':'&gt;',"'":'&apos;','"':'&quot;','&':'&amp;'}[s];
+	    	//return '&#' + s.charCodeAt(0) + ';';
+	    });
+    },
+
+    /*
     Function: deCamelize
         Convert camelCase string to space-separated set of words.
 
@@ -52,6 +66,14 @@ String.implement({
         //return this.replace(/([a-zà-ý])([A-ZÀ-Ý])/g,"$1 $2");
         return this.replace(/([a-z\xe0-\xfd])([A-Z\xc0-\xdd])/g,"$1 $2");
     },
+
+	//ES6 polyfill
+	startsWith: function( match ){
+		return !this.indexOf(match);
+	},
+	endsWith: function( match ){
+		return this.slice( -match.length ) == match ;
+	},
 
     /*
     Function: trunc
@@ -112,7 +134,7 @@ String.implement({
 
         return ( I18N[I18N.PREFIX + this] || this ).substitute(
 
-            ( typeOf(params) == 'object' ) ? params : Array.from(arguments)
+            ( typeOf(params) == "object" ) ? params : Array.from(arguments)
 
         );
 
@@ -162,7 +184,7 @@ String.implement({
     */
     xsubs: function(object, regexp){
 
-        if( typeOf(object) != 'object' ){
+        if( typeOf(object) != "object" ){
             object = Array.from(arguments);
             regexp = null;
         }
@@ -198,16 +220,19 @@ String.implement({
         > "zebra".sliceArgs( "zebra-eee-ffa" ); //returns ['eee','ffa']
         > "zebra".sliceArgs( "horse" );  //returns null
         > "zebra".sliceArgs( "zebra" );  //returns []
+        > "zebra".sliceArgs( "horse zebra-eee-ffa" ); //returns ['eee','ffa']
+        > "zebra".sliceArgs( "zebra-eee-ffa monkey" ); //returns ['eee','ffa']
+        > "zebra".sliceArgs( "horse zebra-eee-ffa monkey" ); //returns ['eee','ffa']
 
     */
     sliceArgs: function(element, regexp){
 
-        var args = element.grab /*isElement*/ ? element.className : element;
+        var args = element.className || String(element);
 
         if( !regexp) regexp = "(?:^|\\s)("+this+"(?:-\\w+)*)(?:\\s|$)"; //default '-' separated arguments
 
         args = args.match( regexp );
-        return args && args[1].split('-').slice(1);
+        return args && args[1].split("-").slice(1);
 
     },
 
@@ -219,17 +244,17 @@ String.implement({
         Return a (string) classname to invoke the contextual colors.
 
     Example
-    >    'panel'.fetchContext( 'accordion-danger') => 'panel panel-danger'
-    >    'panel'.fetchContext( 'commentbox-success') => 'panel panel-success'
+    >    "panel".fetchContext( "accordion-danger") => 'panel panel-danger'
+    >    "panel".fetchContext( "commentbox-success") => 'panel panel-success'
 
     */
     fetchContext : function(element){
 
         var name = element.grab /*isElement*/ ? element.className : element;
 
-        name = (name.match( /\b(default|primary|success|info|warning|danger)(\b|$)/ )||[,'default'])[1];
+        name = (name.match( /\b(default|primary|success|info|warning|danger)(\b|$)/ )||[0,'default'])[1];
 
-        return this + ' ' + this + '-' + name ;
+        return this + " " + this + "-" + name ;
 
     }
 

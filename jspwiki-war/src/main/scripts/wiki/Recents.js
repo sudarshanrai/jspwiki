@@ -44,7 +44,7 @@ DOM-structure:
 Examples:
 >    wiki.add(".searchbox-recents", function(element){
 >       new Wiki.Recents(element, {
->           items: wiki.prefs.get("RecentSearch"),
+>           items: wiki.prefs("RecentSearch"),
 >           onChange: function(recents){ wiki.set("RecentSearch",recents); }
 >       });
 >   });
@@ -70,7 +70,7 @@ Wiki.Recents = new Class({
         if( items[0] ){
 
             while(items[i]){
-                list.push(li, ["a", { html: items[i++].stripScripts() }] );
+                list.push(li, ["a", { html: items[i++].escapeHtml() }] );
             }
             list.push(li + ".clear", ["a", [ "span.btn.btn-xs.btn-default", {text: "sbox.clearrecent".localize() }]]);
             dropdown.adopt( list.slick() );
@@ -83,7 +83,7 @@ Wiki.Recents = new Class({
 
         var self = this, form = self.form;
 
-        if( element.match(".clear") ){
+        if( element.matches(".clear") ){
 
             //element.getSiblings("li.recents").destroy();
             //element.destroy();
@@ -93,7 +93,7 @@ Wiki.Recents = new Class({
 
         } else {
 
-            form.query.value = element.get("text");
+            form.query.value = element.textContent;
             form.submit();
 
         }
@@ -104,12 +104,12 @@ Wiki.Recents = new Class({
 
         var self = this,
             items = self.items,
-            value = self.form.query.value.stripScripts(); //xss
+            value = self.form.query.value.escapeHtml(); //xss
 
         if( items.indexOf( value ) < 0 ){
 
             //insert new item at the start of the list, and cap list on max 10 items
-            if( items.unshift(value) > 9){ items = items.slice(0, 9); }
+            items = [value].concat( items.slice(0, 8) );
             self.fireEvent("change", [self.items = items] );
 
         }

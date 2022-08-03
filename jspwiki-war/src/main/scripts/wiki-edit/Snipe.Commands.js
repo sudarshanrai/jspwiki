@@ -18,6 +18,8 @@
     specific language governing permissions and limitations
     under the License.
 */
+/*eslint-env browser*/
+/*global typeOf, instanceOf, Class, Options, Events, Snipe, Dialog  */
 /*
 Class: SnipEditor.Commands
     This class preprocesses all command triggers, such as
@@ -84,7 +86,6 @@ Snipe.Commands = new Class({
             dialog,
             dialogs = options.dialogs || {};
 
-
         //add click buttons and dialogs
         container.addEvent("click:relay([" + dataCmd + "])", function(event){
 
@@ -94,7 +95,8 @@ Snipe.Commands = new Class({
             dlg ? dlg.toggle() : self.action( cmd );
 
             // input fields (eg checkboxes) keep the default behaviour; other click events are disabled
-            if( !this.match("input") ){ event.stop(); }
+            if( !this.matches("input") ){ event.stop(); }
+
 
         });
 
@@ -104,7 +106,7 @@ Snipe.Commands = new Class({
             command = button.get(dataCmd);
             self.btns[command] = button;
 
-            if( dialog = container.getElement(".dialog." + command) ){
+            if( (dialog = container.getElement(".dialog." + command)) ){
 
                 if( !dialogs[command] ){ dialogs[command] = [Dialog, {}]; }
 
@@ -158,7 +160,7 @@ Snipe.Commands = new Class({
             //fire ACTION event back to the invoker of the Snipe.Commands
             actionHdl = function(value){ self.fireEvent("action", [command, value]); };
 
-        console.log("Snipe.Commands: attachDialog() ", command, dialog);
+        //console.log("Snipe.Commands: attachDialog() ", command, dialog);
 
         return self.dlgs[command] = dialog.addEvents({
             open: self.openDialog.bind(self, command),
@@ -187,7 +189,7 @@ Snipe.Commands = new Class({
         //console.log("Commands.action ", command, " value:", value, " btn=", button, " dlg=", dialog);
         //if( button ) button = document.id( button);
 
-        if( button && button.match(".disabled") ){
+        if( button && button.matches(".disabled") ){
 
             //nothing to be done here
 
@@ -228,15 +230,23 @@ Snipe.Commands = new Class({
     */
     createDialog: function( command ){
 
-        var dialog = Function.from( this.dialogs[command] )();
+        var dialog = $.toFunction( this.dialogs[command] )();
 
         //console.log("Snipe.Commands: createDialog() " + command + " ",dialog );
 
-        if( typeOf(dialog) != "array" ){ dialog = [ Dialog.Selection, { body: dialog } ]; }
+        if( typeOf(dialog) != "array" ){
 
-        if( !dialog[1].relativeTo ){ dialog[1].relativeTo = this.options.relativeTo || document.body; }
+            dialog = [ Dialog.Selection, { body: dialog } ];
 
-        dialog[1].autoClose = false; //checkme: suggest-dialogs should not be autoclose?
+        }
+
+        if( !dialog[1].relativeTo ){
+
+            dialog[1].relativeTo = this.options.relativeTo || document.body;
+
+        }
+
+        dialog[1].autoClose = false;
 
         //note: make sure to initialize this.dialogs[command] prior to calling show()
         return this.attach( new dialog[0]( dialog[1] ), command);
@@ -260,7 +270,6 @@ Snipe.Commands = new Class({
             button = self.btns[command];
 
         //console.log("Snipe.Commands: openDialog() " + command + " " + activeDlg);
-
         if( activeDlg && (activeDlg != newDlg) ){ activeDlg.hide(); }
         self.activeDlg = self.dlgs[command];
 
@@ -276,13 +285,12 @@ Snipe.Commands = new Class({
     Arguments:
         command - (mandatory) dialog to be closed
     */
-    closeDialog: function(command, dialog){
+    closeDialog: function(command /*, dialog*/){
 
         var self = this,
             button = self.btns[command];
 
         //console.log("Snipe.Commands: closeDialog() " + command )
-
         if( self.dlgs[command] == self.activeDlg ){ self.activeDlg = null; }
 
         if( button ){ button.removeClass("active"); }

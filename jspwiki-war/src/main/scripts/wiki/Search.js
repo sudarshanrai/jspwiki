@@ -18,12 +18,12 @@
     specific language governing permissions and limitations
     under the License.
 */
+/*eslint-env browser*/
+/*global Class, Options, Events, Wiki, GraphBar  */
+/*exported Wiki.Search, SearchBox */
 /*
 Class: Wiki.Search
     ...
-
-Depends:
-    Graphbar
 
 DOM Structure:
     (start code)
@@ -123,9 +123,11 @@ Wiki.Search = new Class({
             update: result,
             onComplete: function(){
 
-                new GraphBar( result.getElement( ".graphBars" ));
-                self.fireEvent( "onComplete" );
-
+                var g = result.getElement( ".graphBars" );
+                if(g){
+                    new GraphBar( result.getElement( ".graphBars" ));
+                    self.fireEvent( "onComplete" );
+                }
             }
         }).send();
 
