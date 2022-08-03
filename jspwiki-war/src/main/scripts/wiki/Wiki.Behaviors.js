@@ -18,6 +18,12 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/*eslint-env browser*/
+/*global $$, Wiki, Cookie,
+         TableX, GraphBar, Tab, Accordion, Viewer, Collapsible,
+         prettyPrint, CommentBox, Columns, Tips, Flip, AddCSS */
+
 /*
 Wiki.Behaviours
     Contains all behaviours added by default to JSPWiki.
@@ -55,13 +61,37 @@ Depend on :
     behaviors/TableX.Zebra.js
 */
 
-!function( wiki ){
+!(function( wiki ){
 
 var TheSlimbox, T = TableX;
 
 
 /*
+Behavior: Broken images
+    Replace broken image browser icons
+*/
+wiki.once( "img:not(outlink)", function(imgs){
+
+    imgs.addEvent("error", function(){
+
+        var img = $(this);
+        [ "span.danger.img-error", {
+                text: "broken.image".localize()
+            },
+            [
+                "span", { text: img.alt || img.src }
+            ]
+        ].slick().replaces(img);
+
+    });
+
+});
+
+/*
 Behavior: GraphBars, Progress-bars
+
+%%progress-red-striped 50/%  =>  %%graphBars-progress-red-striped-minv0-maxv100 %%gBar 50/% /%
+%%progress-red-striped 50/75 /%  =>  %%graphBars-progress-red-striped-minv0-maxv75 %%gBar 50/% /%
 
 %%progress 50 /%
 %%progress 50/75 /%
@@ -82,15 +112,8 @@ wiki.add("*[class^=progress]", function(element){
         maxv = RegExp.$2;
     }
 
-    ( element.get("tag") + clazz + "-maxv" + maxv ).slick().wraps(element);
+    ( element.get("tag") + clazz + "-minv0-maxv" + maxv  ).slick().wraps(element);
     element.className = "gBar";
-
-
-/*
-%%progress-red-striped 50/%  =>  %%graphBars-progress-red-striped-maxv100 %%gBar 50/% /%
-%%progress-red-striped 50/75 /%  =>  %%graphBars-progress-red-striped-maxv75 %%gBar 50/% /%
-
-*/
 
     })
 
@@ -106,8 +129,8 @@ Credit: Lea Verou,  Static Pie
 */
     .add(".pie", function(pie){
 
-	    pie.style.animationDelay = '-' + parseFloat(pie.textContent) + 's';
-	    pie.setAttribute('data-percent', parseFloat(pie.textContent)+"%");
+        pie.style.animationDelay = '-' + parseFloat(pie.textContent) + 's';
+        pie.setAttribute('data-percent', parseFloat(pie.textContent)+"%");
 
     })
 
@@ -116,9 +139,6 @@ Behavior:%%graphBar .. /%
 */
     .add("*[class^=graphBars]", GraphBar )
 
-
-    //FIXME -- OBSOLETE ?? top level TAB of the page
-    //.add(".page > .tabmenu a:not([href])", Tab )
 
 /*
 Behavior:tabs & pills
@@ -133,19 +153,22 @@ Behavior:tabs & pills
 Behavior:Accordion
 >   %%accordion .. /%
 >   %%leftAccordion .. /%
+>   %%left-accordion .. /%
 >   %%rightAccordion .. /%
+>   %%right-accordion .. /%
 >   %%tabbedAccordion .. /%
+>   %%tabbed-accordion .. /%
 >   %%pillsAccordion .. /%
+>   %%pills-accordion .. /%
 */
     .add("[class^=accordion]", Accordion)
-    .add("[class^=leftAccordion]", Accordion, { type: "pills", position: "pull-left" })
-    .add("[class^=rightAccordion]", Accordion, { type: "pills", position: "pull-right" })
-    .add(".tabbedAccordion", Accordion, { type: "tabs" })
-    .add(".pillsAccordion", Accordion, { type: "pills" })
-
+    .add("[class^=leftAccordion],[class^=left-accordion]", Accordion, { type: "pills", position: "pull-left" })
+    .add("[class^=rightAccordion],[class^=right-accordion]", Accordion, { type: "pills", position: "pull-right" })
+    .add(".tabbedAccordion,.tabbed-accordion", Accordion, { type: "tabs" })
+    .add(".pillsAccordion,.pills-accordion", Accordion, { type: "pills" })
 
 /*
-Behavior:JSPWiki Categories
+Behavior: Categories
 >   %%category .. /%
 */
     .add( ".category a.wikipage", function(element) {
@@ -160,10 +183,13 @@ Behavior:Alert (based on Bootstrap)
 */
     .add(".alert", function(element){
 
-        element.addClass("alert-warning alert-dismissable").grab(
+        element.addClass("alert-dismissable").appendChild(
 
             "button.close[type=button][html=&times;]".slick()
-                .addEvent("click", function(){ element.dispose(); }),
+                .addEvent("click", function(){
+                    element.remove();
+
+                }),
             "top"
 
         );
@@ -176,7 +202,14 @@ Behavior: Quote (based on Bootstrap)
 */
     .add(".quote", function(element){
 
-        "blockquote".slick().wraps( "p".slick().wraps(element) );
+        "blockquote".slick().wraps( element );
+
+    })
+
+
+    .add(".caps", function(element){
+
+        element.mapTextNodes( function(s){ return s.toLowerCase(); });
 
     })
 
@@ -186,18 +219,32 @@ Behavior: Viewer
 >     %%viewer [link to youtube, vimeo, some-wiki-page, http://some-external-site ..] /%
 >     [description | url to youtube... | class="viewer"]
 */
-    .add("a.viewer, div.viewer a", function( a ){
+    .add("a.viewer, div.viewer a, span.viewer a", function( a ){
 
         Viewer.preload(a.href, { width: 800, height: 600 }, function( element ){
 
             var next = a.getNext();
-            if( next && next.match("img.outlink") ){ next.dispose(); }
+            if( next && next.matches("img.outlink") ){ next.remove(); }
 
             element.addClass("viewport").replaces(a);
 
         });
+    })
 
+
+    .add(".maps,.map", function( map ){
+
+        var address = map.textContent.trim(),
+            //mapSvc = map.className.replace("-maps","").replace(/maps?/,"google"),
+            url = "https://maps.google.com/maps?q=" + encodeURIComponent( address );
+
+        Viewer.preload(url, { width: 800, height: 600 }, function( element ){
+
+            element.addClass("viewport").replaces(map);
+
+        });
     });
+
 
 
 /*
@@ -252,17 +299,19 @@ becomes
 //helper function, to collect the links to be converted
 function filterJSPWikiLinks(element){
 
-    return element.match("a") ?
+    return element.matches("a") ?
         element :
-        element.getElements( element.match(".slimbox-attachments") ?
+        element.getElements( element.matches(".slimbox-attachments") ?
             "a[href].attachment" :
             // otherwise,  catch several different cases in one go
+            //    img:not([href$=/attachment_small.png]):not(.outlink)  ::jspwiki small icons
             //    img:not([src$=/attachment_small.png]):not(.outlink)  ::jspwiki small icons
             //    a[href].attachment,
             //    a[href].external,
             //    a[href].wikipage,
             //    a[href].interwiki
-            "img:not([src$=/attachment_small.png]):not(.outlink),a[href].attachment,a[href].external,a[href].wikipage, a[href].interwiki"
+            //    .recentchanges td:not(:nth-child(3)) a:first-child
+            "img:not([href$=/attachment_small.png]):not([src$=/attachment_small.png]):not(.outlink),a[href].attachment,a[href].external,a[href].wikipage, a[href].interwiki, .recentchanges td:not(:nth-child(3n)) a:first-child"
         );
 }
 
@@ -341,33 +390,21 @@ Depends on:
 */
 
 //helper function
-function collapseFn(element, cookie){
+function collapseFn(elements, pagename){
 
-    var TCollapsible = Collapsible,
-        clazz = element.className,
-        list = "collapse",
-        box = list + "box";
+    new Collapsible( elements, {
+        cookie: {
+            name: "JSPWiki.Collapse." + (pagename || wiki.PageName),
+            path: wiki.BaseUrl,
+            duration: 20
+        }
+    });
 
-    cookie = cookie || wiki.PageName;
-
-    cookie = new Cookie.Flags("JSPWikiCollapse" + cookie, {path: wiki.BasePath, duration: 20});
-
-    if( clazz == list ){
-
-        new TCollapsible.List(element, { cookie: cookie });
-
-    } else if( clazz.indexOf(box) == 0 ){
-
-        new TCollapsible.Box(element, {
-            cookie: cookie,
-            collapsed: clazz.indexOf(box + "-closed") == 0
-        });
-    }
 }
 
 wiki
-    .add(".page div[class^=collapse]", collapseFn )
-    .add(".sidebar div[class^=collapse]", collapseFn, "Sidebar")
+    .once(".page div[class^=collapse]", collapseFn )
+    .once(".sidebar div[class^=collapse]", collapseFn, "Sidebar")
 
 /*
 Behavior:Comment Box
@@ -388,15 +425,15 @@ Wiki Markup:
 /*
 Behavior:Columns
 
->    %%columns(-width) .. /%
+>    %%columns .. /%
 */
-    .add( "div[class~=columns]", Columns, { prefix: "columns" } )
+    .add( "div[class^=columns]", Columns, { prefix: "columns" } )
 
 /*
 Dynamic Style: Code-Prettifier
     JSPWiki wrapper around http://google-code-prettify.googlecode.com/svn/trunk/README.html
 
-    TODO: add option to overrule the choice of language:
+    TODO: add option to set the choice of language:
     >    "bsh", "c", "cc", "cpp", "cs", "csh", "cyc", "cv", "htm", "html",
     >    "java", "js", "m", "mxml", "perl", "pl", "pm", "py", "rb", "sh",
     >    "xhtml", "xml", "xsl"
@@ -407,23 +444,32 @@ Example:
 >    }}} /%
 
 */
-    .add("div.prettify pre, div.prettify code", function(element){
-
-        element.addClass("prettyprint");
+    .add("div.prettify pre:not(.prettyprint), div.prettify code:not(.prettyprint)", function(element){
 
         //brute-force line-number injection
-        "pre.prettylines".slick({
+        "div".slick().wraps(element).grab(
+            "pre.prettylines".slick({
 
-            html: element.innerHTML.trim().split("\n").map( function(line, i){
-                return i + 1; }
-            ).join("\n")
+                html: element.innerHTML.trim().split("\n").map( function(line, i){
+                    return i + 1; }
+                ).join("\n")
 
-        }).inject(element, "before");
-
-    })
-    .add("[class~=prettify-nonum] pre, [class~=prettify-nonum] code", function(element){
+            }),"top");
 
         element.addClass("prettyprint");
+        /*html5 expects  <pre><code>  */
+        if( element.matches("pre") ){
+            element.innerHTML = "<code>" + element.innerHTML + "</code>";
+        }
+
+    })
+    .add("[class~=prettify-nonum] pre:not(.prettyprint), [class~=prettify-nonum] code:not(.prettyprint)", function(element){
+
+        element.addClass("prettyprint");
+        /*html5 expects  <pre><code>  */
+        if( element.matches("pre") ){
+            element.innerHTML = "<code>" + element.innerHTML + "</code>";
+        }
 
     })
 
@@ -457,7 +503,7 @@ Behavior: Table behaviors
     %%zebra-pink ... /%      => odd rows get backgroundcolor red
     %%zebra-eee-red ... /%     => odd rows: #eee, even rows: red
 
-    %%table-striped-bordered-hover-condensed-fit-filter-sort
+    %%table-striped-bordered-hover-condensed-fit-filter-sort-noborder
     %%sortable .. /%
     %%table-filter .. /%
 
@@ -478,22 +524,22 @@ Behavior: Table behaviors
 
     .add(".sortable,div[class*=table-]", function(element){
 
-        element.ifClass(element.hasClass("sortable"), "table-sort");
+        element.ifClass(element.matches(".sortable"), "table-sort");
 
         var args = "table".sliceArgs(element),
             arg,
-            tables = element.getElements("table"),
+            tables = element.getElements("table:not(.imageplugin)"),
             hints = Object.map({
                 sort: "sort.click",
                 atoz: "sort.ascending",
                 ztoa: "sort.descending"
             }, String.localize);
 
-        while( args[0] ){
+        while( args && args[0] ){
 
             arg = args.shift();
 
-            if( arg.test("striped|bordered|hover|condensed|fit")){
+            if( arg.test("striped|bordered|hover|condensed|fit|noborder")){
 
                 tables.addClass("table-"+arg);
 
@@ -532,6 +578,8 @@ Behavior: Scrollable pre area with maximum size (based on BOOTSTRAP)
             .addClass("pre-scrollable")
             .setStyle("maxHeight", maxHeight + "px");
 
+        //FFS : support scollable > table
+
     })
 
 /*
@@ -542,24 +590,26 @@ Behavior: Font Icon style (based on BOOTSTRAP)
     //Font-Awesome: .fa.fa-<icon-name>
     FontJspwiki (via icomoon) : .icon-<icon-name>
 */
-    .add("[class^=icon-]", function(element){
+/*
+    .add("[class^=icon-]", function( element ){
 
         //element.className="glyphicon glyph"+element.className;
         //element.className = "fa fa-"+element.className.slice(5);
 
     })
-
+*/
 /*
 Behavior: List (based on BOOTSTRAP)
 
 >   %%list-unstyled-hover-group-nostyle
 
 */
-    .add("[class|=list]", function(element){
+    .add("[class*=list-]", function(element){
 
         var args = "list".sliceArgs(element),
             lists = element.getElements("ul|ol");
 
+        if( !args ) return;
         args.each( function( arg ){
 
             if( arg.test("unstyled|hover|group|nostyle") ){
@@ -623,8 +673,20 @@ DOM Structure:
     })
 
 /*
+Behavior: Magnify
+    Add magnifying image glass
+
+Wiki-markup:
+    > %%magnify <img> /%
+    > [{Image src='...' class='magnify' }]
+
+*/
+    .once(".magnify img", Magnify)
+
+
+/*
 Behavior: DropCaps
-    Convert the first character of a paragraph to a large "DropCap"
+    Convert the first character of a paragraph to a large "DropCap" character
 
 >    %%dropcaps .. /%
 
@@ -633,7 +695,7 @@ Behavior: DropCaps
 
         var content, node = element.firstChild;
 
-        if( node.nodeType == 3 ){   // this is a text-node
+        if( node.nodeType == 3 ){   // aha, this is a text-node
 
             content = node.textContent.trim();
             node.textContent = content.slice(1);  //remove first character
@@ -652,6 +714,224 @@ Behavior: Add-CSS
 */
     .add(".add-css", AddCSS)
 
+
+/*
+Behavior: Invisibles
+    Show hidden characters such as tabs and line breaks.
+    Credit: http://prismjs.com/plugins/show-invisibles/
+
+CSS:
+(start code)
+.token.tab:not(:empty):before,
+.token.cr:before,
+.token.lf:before { color: hsl(24, 20%, 85%); }
+
+.token.tab:not(:empty):before { content: '\21E5'; }
+.token.cr:before { content: '\240D'; }
+.token.lf:before { content: '\240A'; }
+(end)
+*/
+    .add(".invisibles pre, .reveal pre", function(element){
+
+        var token = "<span class='token {0}'>$&</span>";
+
+        element.innerHTML = element.innerHTML
+            .replace( /\t/g, token.xsubs("tab") )
+            .replace( /\n/g, token.xsubs("lf") )
+            .replace( /\r/g, token.xsubs("cr") );
+
+    })
+
+
+/*
+wiki-slides
+
+*/
+    .once(".page-content.wiki-slides", function(elements){
+
+        var divider = "hr";
+
+        elements
+            .grab(divider.slick(), "top") //add one extra group-start-element at the top
+            .groupChildren(divider, "div.slide");
+
+    })
+
+
+/*
+Behviour:  Background
+    Move image to the background of a page.
+    Also support additional image styles on background images.
+
+Case1:
+div[this is the parent container]
+    img.bg[src=<imageurl>]
+    ...
+    div other content
+    ...
+
+Case2:
+div[this is the parent container]
+    table.imageplugin
+        tr
+            td.bg
+                img[src=<imageurl>]
+    ...
+    div other content
+    ...
+
+Case3:
+div[this is the parent container]
+    div.bg
+        img[src=<imageurl>]
+    ...
+    div other content
+    ...
+
+
+After
+div[this is the parent container]
+    span.background[background-image=<image-url>]
+    div.background-overlay[z-index=2]
+        ...
+        div other content
+        ...
+
+
+%%bg [<image link>] /%
+%bg [{IMAGE src='<image link>' }]/%
+[{IMAGE src='<image link>' class='bg' }]
+
+%%bg-image.bg-fixed [<image link>] /%
+[{IMAGE src='<image link>' class='bg-image bg-fixed' }]
+
+*/
+    .add(".bg > table.imageplugin img, .bg > img", function( image ){
+
+        var bgBox = image.getParent(".bg"),
+            clazz = bgBox.className; //contains possibly other styles to be applied to the background image
+
+        if( bgBox && bgBox.matches("td") ){
+            bgBox = bgBox.getParent("table");
+        }
+
+        if( bgBox ){
+
+            bgBox
+                .addClass("bg")   //need .bg as trigger for groupChildren() !
+                .getParent()      //move up to the containing element
+                .addClass("has-background")
+                .groupChildren(".bg", "div.bg-overlay.clearfix", function(wrapper, bg){
+
+                    //use a extra container span to allow additional effects
+                    //on the background image without impact on the overlay content ...
+                    var element = "span".slick();
+                    element.className = clazz;
+                    element.style.backgroundImage = "url(" + image.src + ")";
+                    element.inject(bg, "before");
+
+            });
+            //bgBox.destroy();   //not really needed as per default css the .bg  element is hidden
+            //bgBox.parentNode.removeChild(bgBox);
+        }
+
+    })
+
+/*
+Behvior:  Image Caption
+
+DOM Structure
+
+Case1
+from::
+    div.caption(-arrow)(-overlay).other-class
+        img.inline[src='...']
+        caption-text
+
+to::
+    figure.caption(-arrow)(-overlay).other-class
+        figcaption.other-class
+            caption-text
+        img.inline[src='...']
+
+
+Case2
+from::
+    div.caption(-arrow)(-overlay).other-class
+        table.imageplugin
+            tr
+                td
+                    img[src='...']
+        caption-text
+
+to::
+    div.caption(-arrow)(-overlay)
+        table.imageplugin
+            caption.other-class
+                caption-text
+            tr
+                td
+                    img[src='...']
+
+*/
+    .add("[class^=caption] > .imageplugin", function( imageplugin ){
+
+        var caption = imageplugin.getParent(),
+            oldcaption = imageplugin.getFirst("caption");
+
+        if( !oldcaption ){
+
+            imageplugin.wraps(caption,"top");
+
+            "caption".slick({
+                html: caption.innerHTML,
+                "class": caption.className
+            }).replaces(caption);
+
+        }
+
+    })
+    .add("[class^=caption] > img.inline", function( img ){
+
+        var caption = img.getParent();
+
+        "figure".slick().grab(img).wraps(caption,"top");
+
+        "figcaption".slick({
+            html: caption.innerHTML,
+            "class": caption.className
+        }).replaces(caption);
+
+    })
+
+/*
+Experimental
+svg pie,
+credit: lea verou
+
+*/
+    .add(".pie2", function( pie ){
+
+        var p = parseFloat(pie.textContent),
+            NS = "http://www.w3.org/2000/svg",
+            svg = document.createElementNS(NS, "svg"),
+            circle = document.createElementNS(NS, "circle"),
+            title = document.createElementNS(NS, "title");
+
+        circle.setAttribute("r", 16);
+        circle.setAttribute("cx", 16);
+        circle.setAttribute("cy", 16);
+        circle.setAttribute("stroke-dasharray", p + " 100");
+
+        svg.setAttribute("viewBox", "0 0 32 32");
+        title.textContent = pie.textContent;
+        pie.textContent = "";
+        svg.appendChild(title);
+        svg.appendChild(circle);
+        pie.appendChild(svg);
+
+    })
+
 /*
 Behavior:Flip, Flop
 
@@ -662,4 +942,4 @@ Behavior:Flip, Flop
     .add( "div[class|=flop]", Flip, { prefix: "flop" } );
 
 
-}( Wiki );
+})( Wiki );

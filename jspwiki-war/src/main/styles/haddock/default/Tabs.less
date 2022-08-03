@@ -46,3 +46,14 @@ DOM structure:  ( based on Bootstrap conventions, without [data-toggle=tab] )
     .tab-pane { .panel-body; } //inherit padding of a panel body
 
 }
+
+[class^=tab-] *:first-child {
+    margin-top:0;
+}
+.tabs {
+	&>h2, &>h3, &>h4 {
+		& > .hashlink, & > .editsection {			//??.label
+			display:none;
+		}
+	}
+}

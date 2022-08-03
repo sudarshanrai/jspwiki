@@ -108,7 +108,7 @@ Viewer.Carousel = new Class({
                              Number(width - el.width).limit(0, width) / 2 + "px"
                 }},
                 "div.carousel-caption", {
-                    html: (el.title || el.alt || el.get("text"))
+                    html: (el.title || el.alt || el.textContent)
                 }
             ]);
             indicators.push("li");
@@ -314,7 +314,7 @@ Example:
 >    $(element).addEvent("transitionend",function(event){ ...})
 
 */
-!function(css3){
+!(function(css3){
 
 var B = Browser,
     NativeEvents = Element.NativeEvents,
@@ -338,5 +338,5 @@ var B = Browser,
 
     }
 
-}({transition: "TransitionEnd"});
+})({transition: "TransitionEnd"});
 //})({transition:"TransitionStart",transition:"TransitionEnd",animation:"AnimationStart",animation:"AnimationIteration",animation:"AnimationEnd");

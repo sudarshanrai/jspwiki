@@ -20,7 +20,7 @@
 */
 /*jshint forin:false, noarg:true, noempty:true, undef:true, unused:true, plusplus:false, immed:false, browser:true, mootools:true */
 
-!function(){
+!(function(){
 
 /* helper stuff for <array>.toNatural() */
 
@@ -118,15 +118,14 @@ Array.implement({
             if( !isNaN(column) ){ val = ( isNode ? val.getChildren() : val )[column]; }
 
             //retrieve the value and convert to string
-            val = ("" + (isNode ? val.get("text") || val.get("title") : val)).trim();
-
+            val = ("" + (isNode ? val.getAttribute("data-sortvalue") || val.textContent || val.get("title") : val)).trim();
 
             //2. Convert and store in type specific arrays (num, dmy, kmgt, nat)
 
             //CHECKME: some corner cases: numbers with leading zero's, confusing date string
             if( /(?:^0\d+)|(?:^[^\+\-\d]+\d+$)/.test(val) ){ num = dmy = 0; }
 
-//remove non numeric tail : replace( /[\w].*$/,'');
+            //remove non numeric tail : replace( /[\w].*$/,'');
             if( num && isNaN( num[i] = +val ) ){ num = 0; }
             //if( num && isNaN( num[i] = + val.replace(/[\W].*$/,"") ) ){ num = 0; }
 
@@ -217,4 +216,4 @@ Array.implement({
 
   });
 
-}();
+})();

@@ -18,135 +18,160 @@
     specific language governing permissions and limitations
     under the License.
 */
+/*global typeOf, Class, Dialog  */
+/*exported Dialog.Selection */
+
 /*
 Class: Dialog.Selection
-	A simple selection dialog, with a list of selectable items.
+    A simple selection dialog, with a list of selectable items.
 
 Arguments:
-	options - see [Dialog] object
+    options - see [Dialog] object
 
 Options:
-	body - list of selectable items, defined as a string ,array or object.
-	onSelect - callback function when an item is clicked
-	autoClose - (default true) hide the dialog when an iten is clicked
+    body - list of selectable items, defined as a string ,array or object.
+    onSelect - callback function when an item is clicked
+    autoClose - (default true) hide the dialog when an iten is clicked
 
 Inherits from:
-	[Dialog]
+    [Dialog]
 
 Example:
-	(start code)
-	new Dialog.Selection({
-		body:"a|b|c|d",
-		caption:"Snippet Dialog",
-		autoClose:true,
-		onClick:function(v){ alert("clicked "+v) }
-	});
-	new Dialog.Selection({
-		body:[a,b,c,d],
-		caption:"Snippet Dialog",
-		onClick:function(v){ alert("clicked "+v) }
-	});
-	new Dialog.Selection({
-		body:{"avalue":"a","bvalue":"b","cvalue":"c"},
-		caption:"Snippet Dialog",
-		onClick:function(v){ alert("clicked "+v) }
-	});
-	(end code)
+    (start code)
+    new Dialog.Selection({
+        body:"a|b|c|d",
+        caption:"Snippet Dialog",
+        autoClose:true,
+        onClick:function(v){ alert("clicked "+v) }
+    });
+    new Dialog.Selection({
+        body:[a,b,c,d],
+        caption:"Snippet Dialog",
+        onClick:function(v){ alert("clicked "+v) }
+    });
+    new Dialog.Selection({
+        body:{"avalue":"a","bvalue":"b","cvalue":"c"},
+        caption:"Snippet Dialog",
+        onClick:function(v){ alert("clicked "+v) }
+    });
+    (end code)
 */
 Dialog.Selection = new Class({
 
-	Extends: Dialog,
+    Extends: Dialog,
 
-	options: {
-		//onAction: function(value){},
-		//selected: <some value>
-		cssClass: "dialog selection",
-		autoClose: true
-	},
+    options: {
+        //onAction: function(value){},
+        //selected: <some value>
+        cssClass: "dialog selection",
+        match: "^=",  //starts-with
+        autoClose: true
+    },
 
-	initialize:function( options ){
+    initialize:function( options ){
 
-        this.setClass(".selection",options);
-        this.selected = options.selected || "";
-		this.parent( options );
+        var self = this;
+
+        self.setClass(".selection",options);
+        self.selected = options.selected || "";
+        self.parent( options );
+
+        self.element.addEvent("click:relay(.item)", function(e){
+            e.stop();
+            self.action( this.get("title") );
+        });
 
         //console.log("Dialog.Selection ", this.element.className);
-	},
+    },
 
-	setBody: function(content){
+    setBody: function(content){
 
-		var self = this, items=[];
+        var self = this, items=[];
 
         //console.log("Dialog.Selection body ",content);
-		if( !content ){ content = self.options.body; }
+        if( !content ){ content = self.options.body; }
 
-		//convert "multi|value|string" into [array]
-		if( typeOf(content) == "string" ){ content = content.split("|"); }
+        //convert "multi|value|string" into [array]
+        if( typeOf(content) == "string" ){ content = content.split("|"); }
 
-		//convert [array] into {object} with name:value pairs
-		if( typeOf(content) == "array" ){ content = content.associate(content); }
+        //convert [array] into {object} with name:value pairs
+        if( typeOf(content) == "array" ){
 
-		//convert {object} in DOM elements (ul/li collection)
-		if( typeOf(content) == "object" ){
+            //value should be html escaped !!
+            content = content.reduce( function(accu, item){
+                accu[item] = item.escapeHtml();
+                return accu;
+            }, {});
 
-			Object.each(content, function(value, key){
+        }
 
-			    items.push( value == "" ?
-			        "li.divider" :
-			        "li.item[title=" + key + "]", {html: value}
-			    );
+        //convert {object} in DOM elements (ul/li collection)
+        if( typeOf(content) == "object" ){
 
-			});
-			content = ["ul",items].slick();
+            Object.each(content, function(value, key){
 
-		}
+                items.push( value == "" ?
+                    "li.divider" :
+                    "li.item", {html: value, title: key}
+                );
 
-		if( typeOf( content ) == "element" ){
+            });
+            content = ["ul", items].slick();
 
-			//first move the content elements into the body and highlight the selected item
-			self.parent( content ).setValue( self.selected );
+        }
 
-			//then add the click & hover event handlers
-			self.element.addEvent("click:relay(.item)", function(e){
-			    e.stop();
-                self.action( this.get("title") );
-			});
+        if( typeOf( content ) == "element" ){
 
-		}
+            //first move the content elements into the body and then highlight the selected item
+            self.parent( content )
+                .setValue( self.selected );
 
-		return self;
-	},
+        }
 
-	/*
-	Function: setValue
-		Store the selected value. (this.selected).
-		And highlight the selected item (if any)
-	*/
-	setValue: function( value ){
+        return self;
+    },
 
-		var self = this, selected = "selected", element;
+    /*
+    Function: setValue
+        Store the selected value. (this.selected).
+        And highlight the selected item (if any)
+    */
+    setValue: function( value ){
 
-		element = self.get("." + selected);
-		if( element ){ element.removeClass(selected); }
+        var self = this, selected = "selected", element,
+            target = ".item[title" + self.options.match + value + "]";
 
-        //console.log("Dialog.Selection setValue",value);
-		element = self.get( ".item[title^=" + value + "]" );
-		if( element ){ element.addClass(selected); }
+        /*ffs
+        if( self.hasClass("dialog-filtered") ){
 
-		self[selected] = value;
+            if( value == "" ){
+                this.element.getElements(".item,.divider").show();
+            } else {
+                this.element.getElements(".item,.divider").hide();
+                this.element.getElements(target).show();
+            }
+        }
+        */
+        element = self.get("." + selected);
+        if( element ){ element.removeClass(selected); }
 
-		return self;
-	},
+        element = self.get( target );
+        if( element ){ element.addClass(selected); }
 
-	getValue: function(){
-		return this.selected;
-	},
+        self[selected] = value;
 
-	action: function( value ){
+        return self;
+    },
 
-		//console.log("Dialog.Selection action() ",value);
-		this.setValue( value ).parent(value);
+    getValue: function(){
+        return this.selected;
+    },
 
-	}
+    action: function( value ){
+
+        //console.log("Dialog.Selection action() ",value);
+        this.setValue( value ).parent(value);
+
+    }
 
 });

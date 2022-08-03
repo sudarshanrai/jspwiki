@@ -14,21 +14,24 @@
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
     KIND, either express or implied.  See the License for the
     specific language governing permissions and limitations
-    under the License.  
+    under the License.
 --%>
 
 <%@ page isErrorPage="true" %>
-<%@ page import="org.apache.log4j.*" %>
-<%@ page import="org.apache.wiki.*" %>
+<%@ page import="org.apache.logging.log4j.Logger" %>
+<%@ page import="org.apache.logging.log4j.LogManager" %>
+<%@ page import="org.apache.wiki.api.core.Context" %>
+<%@ page import="org.apache.wiki.api.core.ContextEnum" %>
+<%@ page import="org.apache.wiki.api.core.Engine" %>
+<%@ page import="org.apache.wiki.api.spi.Wiki" %>
 <%@ page import="org.apache.wiki.util.FileUtil" %>
 <%@ taglib uri="http://jspwiki.apache.org/tags" prefix="wiki" %>
 <%!
-    Logger log = Logger.getLogger("JSPWiki"); 
+    Logger log = LogManager.getLogger("JSPWiki");
 %>
 <%
-    WikiEngine wiki = WikiEngine.getInstance( getServletConfig() );
-    WikiContext wikiContext = wiki.createContext( request, 
-                                                  WikiContext.ERROR );
+    Engine wiki = Wiki.engine().find( getServletConfig() );
+    Context wikiContext = Wiki.context().create( wiki, request, ContextEnum.WIKI_ERROR.getRequestContext() );
     String pagereq = wikiContext.getName();
 
     response.setContentType("text/html; charset="+wiki.getContentEncoding() );
@@ -37,34 +40,26 @@
 
     Throwable realcause = null;
 
-    if( exception != null )        
-    {   
-        msg = exception.getMessage();
-        if( msg == null || msg.length() == 0 )
-        {
-            msg = "An unknown exception "+exception.getClass().getName()+" was caught by Error.jsp.";
-        }
-
-        //
-        //  This allows us to get the actual cause of the exception.
-        //  Note the cast; at least Tomcat has two classes called "JspException"
-        //  imported in JSP pages.
-        //
-
-
-        if( exception instanceof javax.servlet.jsp.JspException )
-        {
-            log.debug("IS JSPEXCEPTION");
-            realcause = ((javax.servlet.jsp.JspException)exception).getRootCause();
-            log.debug("REALCAUSE="+realcause);
-        }
-
-        if( realcause == null ) realcause = exception;    
-    }
-    else
+    msg = exception.getMessage();
+    if( msg == null || msg.length() == 0 )
     {
-        realcause = new Exception("Unknown general exception");
+        msg = "An unknown exception "+exception.getClass().getName()+" was caught by Error.jsp.";
     }
+
+    //
+    //  This allows us to get the actual cause of the exception.
+    //  Note the cast; at least Tomcat has two classes called "JspException"
+    //  imported in JSP pages.
+    //
+
+    if( exception instanceof javax.servlet.jsp.JspException )
+    {
+        log.debug("IS JSPEXCEPTION");
+        realcause = ((javax.servlet.jsp.JspException)exception).getCause();
+        log.debug("REALCAUSE="+realcause);
+    }
+
+    if( realcause == null ) realcause = exception;
 
     log.debug("Error.jsp exception is: ",exception);
 
@@ -72,16 +67,23 @@
     wikiContext.getWikiSession().addMessage( msg );
 %>
 
+<!doctype html>
+<html lang="<c:out value='${prefs.Language}' default='en'/>" name="top">
+  <head>
+    <title><wiki:Variable var="applicationname" />: ERROR Page</title>
+  </head>
+
+  <body>
    <h3>JSPWiki has detected an error</h3>
 
    <dl>
-      <dt><b>Error Message</b></dt>
+      <dt>Error Message</dt>
       <dd>
          <wiki:Messages div="error" />
-      </dd>      
-      <dt><b>Exception</b></dt>
+      </dd>
+      <dt>Exception</dt>
       <dd><%=realcause.getClass().getName()%></dd>
-      <dt><b>Place where detected</b></dt>
+      <dt>Place where detected</dt>
       <dd><%=FileUtil.getThrowingMethod(realcause)%></dd>
    </dl>
    <p>
@@ -91,7 +93,7 @@
    then you might want to check your configuration files.  If you are absolutely sure
    that JSPWiki was running quite okay or you can't figure out what is going
    on, then by all means, come over to <a href="http://jspwiki.apache.org/">jspwiki.apache.org</a>
-   and tell us.  There is more information in the log file (like the full stack trace, 
+   and tell us.  There is more information in the log file (like the full stack trace,
    which you should add to any error report).
    </p>
    <p>
@@ -100,4 +102,5 @@
    sleep.  It's not like it's the end of the world.
    </p>
 
-   <br clear="all" />
+  </body>
+</html>

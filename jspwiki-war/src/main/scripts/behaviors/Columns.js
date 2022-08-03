@@ -23,16 +23,13 @@ Script: Columns
     Format the page content side by side, in columns, like in a newspaper.
     HR elements (in wiki {{----}} markup) separate the columns.
     Column widths are equal and automatically calculated.
-    Optionally, you can specify the width in pixel(px) for the columns.
 
     FFS: use HTML5/CSS3 columns options if available
 
-Arguments:
-    width - (optional) column width in pixel(px)
 
 Example:
 (start code)
-    %%columms-300
+    %%columms
         column-text1 ...
         ----
         column-text1 ...
@@ -41,32 +38,22 @@ Example:
 
 DOM Structure
 (start code)
-    div-columns
+    div.columns
         div.col[styles={width:xx%}]
         div.col[styles={width:xx%}]
 (end)
 */
-function Columns(element, options){
+function Columns(element, options) {
 
-    var args = options.prefix.sliceArgs(element),
-        divider = "hr",
-        columnCount = element.getChildren(divider).length,
-        width;
+    var columnCount = element.getElements(">hr").length + 1,
+        width = 100 / columnCount + "%";
 
-    if( columnCount /*>0*/ ){
+    //add one extra group-start-element at the top
+    element.insertBefore("hr".slick(), element.firstChild);
 
-        columnCount++;
-        width = ( args[0] ) ? args[0] / columnCount + "px" : 100 / columnCount + "%";
+    $.wrapChildren(element, "hr", "div.col", function (column) {
 
-        element
-            .addClass("columns")
-            .grab(divider.slick(), "top") //add one extra group-start-element at the top
+        column.setStyle("width", width);
 
-            .groupChildren(divider, "div.col", function(column){
-
-                column.setStyle("width", width);
-
-            });
-    }
-
+    });
 }

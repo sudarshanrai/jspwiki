@@ -45,10 +45,17 @@ Bootstrap
 (end)
 */
 
-.tip-link {
-    .category-link;
-    > [class^=tip] { .hidden; }
+
+.dropdown-menu[data-hover-parent] {
+	.transition(all .5s ease);
 }
 
-@tooltip-bg: rgba(0,0,0,.7);
-@tooltip-arrow-color: rgba(0,0,0,.7);
+
+.tip-link {
+    border-bottom: .1em dotted;
+    > [class^=tip] { .hidden; }
+    &:hover { text-decoration:none; }
+}
+.tooltip-inner {
+    a { color:inherit; }
+}

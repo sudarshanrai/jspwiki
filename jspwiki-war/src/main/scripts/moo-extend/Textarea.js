@@ -18,6 +18,13 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/*eslint-env browser*/
+/*global Class, Options, Events  */
+/*exported Textarea */
+
+/*exported Textarea */
+
 /*
 Class: Textarea
     The textarea class enriches a TEXTAREA element, and provides cross browser
@@ -40,8 +47,11 @@ var Textarea = new Class({
 
         var self = this,
             ta = self.ta = document.id(el);
+            //fireChange = function( event ){ self.fireEvent("change", event); };
 
         self.setOptions(options);
+
+        //ta.addEvents({ change: fireChange, keyup: fireChange });
 
         //Create a shadow div to support getCoordinates() of any character in the textarea
         //This only works if the textarea font is monospace (?)
@@ -68,6 +78,9 @@ var Textarea = new Class({
     toElement: function(){
         return this.ta;
     },
+    focus: function(){
+        this.ta.focus();
+    },
 
     /*
     Function: getValue
@@ -75,6 +88,12 @@ var Textarea = new Class({
     */
     getValue: function(){
         return this.ta.value;
+    },
+
+    setValue: function(value){
+        this.ta.value = value;
+        this.setSelectionRange(0,0);
+        return this;
     },
     /*
     Function: slice
@@ -159,7 +178,7 @@ var Textarea = new Class({
             //textarea.focus();
 
         }
-        //ta.fireEvent("change");
+        ta.fireEvent("change");
         return this;
     },
 
@@ -262,7 +281,7 @@ var Textarea = new Class({
         }
         ta.focus();
         ta.scrollTop = scrollTop;
-        //ta.fireEvent("change");
+        ta.fireEvent("change");
         return this;
 
     },
@@ -331,11 +350,11 @@ var Textarea = new Class({
         var ta = this.ta,
             //make sure the shadow element is always just before of the textarea
             taShadow = this.taShadow.inject(ta, "before"),
-            value = ta.value,
+            value = ta.value.replace(/[<>&]/g,"X"),
             el, t, l, w, h;
 
-        //default character offset is the caret (cursor or begin of the selection)
-        if( !offset ){ offset = this.getSelectionRange().end; }
+        //default character offset is the position of the caret (cursor or begin of the selection)
+        if( offset == undefined ){ offset = this.getSelectionRange().end; }
 
         el = taShadow.set({
             styles: {
@@ -349,8 +368,57 @@ var Textarea = new Class({
         l = ta.offsetLeft + el.offsetLeft - ta.scrollLeft;
         w = el.offsetWidth;
         h = el.offsetHeight;
+
+        //console.log(offset, ta.offsetTop, "top: "+t, ta.offsetLeft, "left: "+l, "width: "+w, "height: "+h, "right: "+(l + w), "bottom: "+(t + h) );
         return { top: t, left: l, width: w, height: h, right: l + w, bottom: t + h };
 
+    },
+
+
+    /*
+    Function: onDragAndDrop
+        Add Drag&Drop handlers on the Textarea
+        Inspired by https://github.com/github/paste-markdown
+
+    */
+    onDragAndDrop: function(processData, onSuccess){
+
+        var self = this,
+            ta = this.ta;
+
+        ta.addEventListener('dragover', function(event /*DragEvent*/){
+
+            var dataTransfer = event.dataTransfer;
+            if (dataTransfer){ dataTransfer.dropEffect = 'copy'; }
+        });
+
+        ta.addEventListener('drop', function(event /*DragEvent*/){
+
+            var dataTransfer = event.dataTransfer;
+            if (dataTransfer && (dataTransfer.files.length == 0)){
+                insertData(event, dataTransfer);
+            }
+        });
+
+        ta.addEventListener('paste', function(event /*ClipboardEvent*/){
+
+            insertData(event, event.clipboardData);
+        });
+
+        function insertData(event, dataTransfer){
+
+            var content = processData(dataTransfer);
+
+            if ( content ) {
+
+                event.stopPropagation();
+                event.preventDefault();
+                self.insertAfter(content);
+
+                if( onSuccess ){ onSuccess(); }
+            }
+        }
     }
+
 
 });
