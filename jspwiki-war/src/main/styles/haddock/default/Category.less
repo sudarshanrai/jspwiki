@@ -47,7 +47,7 @@ DOM structure after:
     (end)
 */
 .category-link {
-    border-bottom:2px solid @wiki-category-link-color;
+    border-bottom:3px solid @wiki-category-link-color;
     &:hover, &:focus { text-decoration:none; }
 }
 
@@ -73,6 +73,11 @@ Style: Popup
 .popup {
     position:absolute;
     z-index:10;
+	//reset font to initial body values (see bootstrap/scaffolding.less
+    font-family: @font-family-base;
+    font-size: @font-size-base;
+    line-height: @line-height-base;
+
     background:@black;
     background:@tooltip-bg;
     border-radius:@border-radius-base;
@@ -119,7 +124,7 @@ Style: Popup
     margin-top:3px;  //slightly move popup down with 3px under the category-link
 
     //FIXME: remove this from AJAXCategory.jsp
-    .categoryTitle { .hide; }
+    .categoryTitle, br { .hide; }
 
 }
 

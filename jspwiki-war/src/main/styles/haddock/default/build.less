@@ -18,28 +18,19 @@
     specific language governing permissions and limitations
     under the License.
 */
+
 /*
 Stylesheet: JSPWiki
     This is the JSPWiki stylesheet of the HADDOCK template.
-    Where possible, it extends from bootstrap 3.0.0.
+    Where possible, it extends from bootstrap 3.3.6.
 
     Skins : TODO
 
     Bootstrap .less files are imported unchanged, so future upgrades are easy.
-    ( ./bootstrap/<file>.less )
     In some cases, JSPWiki variants of the .less file overwrite the bootstrap styles.
     Specific JSPWikis styles are covered by dedicated .less files
     such as JSPWiki Templates, JSPWiki Plugins, JSPWiki Dynamic Styles etc.
 */
-/*!
- * Bootstrap v3.0.0
- *
- * Copyright 2013 Twitter, Inc
- * Licensed under the Apache License v2.0
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Designed and built with all the love in the world by @mdo and @fat.
- */
 
 // Core variables and mixins
 @import "../bootstrap/variables.less";
@@ -114,6 +105,7 @@ Stylesheet: JSPWiki
 @import "pagination.less";
 //JSPWiki Components: Popovers
 @import "Tips.less";
+@import "Magnify.less";
 //JSPWiki Components: Misc
 @import "Viewer.less";
 @import "Viewer.Slimbox.less";
@@ -126,27 +118,25 @@ Stylesheet: JSPWiki
 @import "Template.SearchBox.less";
 @import "Template.Nav.less";
 @import "Template.Content.less";
-@import "Template.Sidebar.less";
 @import "Template.Attach.less";
 @import "Template.Diff.less";
 @import "Template.Search.less";
 @import "Template.Workflow.less";
 
-// TODO:move to separate jspwiki-edit.less ?
+// TODO:move to separate jspwiki-edit.less
 @import "Template.Edit.less";
 @import "Dialog.less";
+//@import "wiki-wysiwyg.less";
 
 @import "Template.Preview.less";
 
 // JSPWiki: Plugins
 @import "ImagePlugin.less";
 @import "IndexPlugin.less";
+@import "InsertPagePlugin.less";
 @import "TOCPlugin.less";
 @import "WeblogPlugin.less";
 @import "RecentChangesPlugin.less";
-
-// JSPWiki: Taglib
-@import "Calendar.less";
 
 // JSPWiki: Dynamic Styles
 @import "CommentBox.less";
@@ -158,9 +148,12 @@ Stylesheet: JSPWiki
 @import "Category.less";
 
 @import "Flip.less";
+@import "Invisibles.less";
+//@import "Pie.less";
 
 @import "prettify.less";
 
+@import "responsive-viewport.less";
 @import "print.less";
 
 
